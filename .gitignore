@@ -1,0 +1,23 @@
+node_modules/
+.next/
+out/
+build/
+.env
+.env.local
+.env*.local
+npm-debug.log*
+.DS_Store
+*.pem
+.vercel
+next-env.d.ts
+*.tsbuildinfo
+.env*
+
+# SQL com segredo preenchido, só local
+supabase/cron-setup.local.sql
+*.local.sql
+
+# WAHA local (sessões do WhatsApp e mídia de teste)
+infra/waha/sessions-local/
+infra/waha/media-local/
+infra/waha/.env

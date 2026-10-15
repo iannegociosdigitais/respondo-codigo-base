@@ -1,0 +1,53 @@
+# WAHA (WhatsApp HTTP API) + Caddy (HTTPS automático).
+# Servidor: qualquer VPS Linux com Docker (ex.: Hetzner CX22, 2 vCPU / 4 GB,
+# ~€4-5/mês) e um domínio apontando pra ele (ex.: wa.olavita.co.il → IP).
+#
+# Passos:
+#   1. copiar esta pasta pro servidor; criar o arquivo .env (ver .env.example)
+#   2. docker compose up -d
+#   3. abrir https://SEU_DOMINIO/dashboard (usuário/senha do .env)
+#   4. no Respondo, configurar WAHA_URL, WAHA_API_KEY, WAHA_WEBHOOK_SECRET
+#   5. a sessão é criada pelo Respondo (Minhas lojas → WhatsApp → ler o QR)
+#
+# Engine GOWS (Go, sem navegador): menor uso de RAM e o que o WAHA aponta
+# como futuro padrão. Sessões ficam em ./sessions (sobrevivem a restart).
+services:
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: waha
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - WHATSAPP_DEFAULT_ENGINE=GOWS
+      - WAHA_PRINT_QR=False
+      - WAHA_WORKER_RESTART_SESSIONS=True
+      - WHATSAPP_RESTART_ALL_SESSIONS=True
+      - WAHA_LOG_LEVEL=info
+      - TZ=Asia/Jerusalem
+      # WAHA_API_KEY=sha512:<hash>  → no .env (só o hash fica no servidor)
+      # WAHA_DASHBOARD_USERNAME / WAHA_DASHBOARD_PASSWORD → no .env
+      # WHATSAPP_SWAGGER_USERNAME / WHATSAPP_SWAGGER_PASSWORD → no .env
+    volumes:
+      - ./sessions:/app/.sessions
+      - ./media:/app/.media
+    expose:
+      - "3000"
+
+  caddy:
+    image: caddy:2
+    container_name: caddy
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - waha
+
+volumes:
+  caddy_data:
+  caddy_config:

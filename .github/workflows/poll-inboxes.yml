@@ -1,0 +1,20 @@
+name: Poll inboxes
+
+# A Vercel (plano gratuito) só roda cron 1x por dia — cedo demais pra
+# atendimento. Usamos o GitHub Actions como scheduler externo em vez
+# disso, chamando a mesma rota que o cron da Vercel chamaria.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  poll:
+    runs-on: ubuntu-latest
+    # Cadastre em Settings > Secrets and variables > Actions:
+    #   segredo CRON_SECRET e variável APP_URL (ex.: https://suaempresa.vercel.app)
+    steps:
+      - name: Chamar /api/cron/poll-inboxes
+        run: |
+          curl -sf -X POST "${{ vars.APP_URL }}/api/cron/poll-inboxes" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

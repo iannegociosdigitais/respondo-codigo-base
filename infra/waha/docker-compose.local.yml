@@ -1,0 +1,28 @@
+# WAHA LOCAL (teste no Mac com Colima/Docker): sem Caddy, porta 3010.
+#   export PATH="/opt/homebrew/bin:$PATH"; colima start
+#   cd infra/waha && docker compose -f docker-compose.local.yml up -d
+#   painel: http://localhost:3010/dashboard (waha / waha)
+# No .env.local do app: WAHA_URL=http://localhost:3010, WAHA_API_KEY=<texto>,
+# WAHA_WEBHOOK_SECRET=<segredo>, WAHA_WEBHOOK_URL=http://host.docker.internal:3000/api/webhooks/waha
+services:
+  waha:
+    image: devlikeapro/waha:arm   # Apple Silicon; no VPS (x86) usar :latest
+    container_name: waha-local
+    restart: unless-stopped
+    environment:
+      - WHATSAPP_DEFAULT_ENGINE=GOWS
+      - WAHA_PRINT_QR=False
+      - WAHA_WORKER_RESTART_SESSIONS=True
+      - WHATSAPP_RESTART_ALL_SESSIONS=True
+      - WAHA_LOG_LEVEL=info
+      - TZ=Asia/Jerusalem
+      - WAHA_API_KEY=${WAHA_API_KEY_HASH}
+      - WAHA_DASHBOARD_USERNAME=waha
+      - WAHA_DASHBOARD_PASSWORD=waha
+    ports:
+      - "3010:3000"
+    volumes:
+      - ./sessions-local:/app/.sessions
+      - ./media-local:/app/.media
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

@@ -1,0 +1,5 @@
+# Substitua pelo domínio que aponta pro servidor (o certificado HTTPS é
+# emitido sozinho pelo Caddy / Let's Encrypt).
+{$WAHA_DOMAIN} {
+  reverse_proxy waha:3000
+}

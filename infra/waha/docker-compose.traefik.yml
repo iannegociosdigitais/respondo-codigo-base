@@ -1,0 +1,40 @@
+# WAHA atrás de um Traefik que já existe na VPS (ex.: o do n8n da Hostinger).
+# Alternativa ao docker-compose.yml para servidor que já usa Traefik. Troque wa.suaempresa.com pelo seu domínio.
+#
+# O Traefik do n8n já ocupa as portas 80/443 e descobre containers pela rede
+# n8n_default; este serviço entra nessa rede com labels próprias e o Traefik
+# emite o certificado (resolver mytlschallenge). O n8n não é tocado.
+#
+# .env no servidor (permissão 600): WAHA_API_KEY=sha512:<hash>,
+# WAHA_DASHBOARD_USERNAME/PASSWORD, WHATSAPP_SWAGGER_USERNAME/PASSWORD.
+# O texto da chave fica só no Vercel (WAHA_API_KEY) e no .env.local (WAHA_PROD_API_KEY).
+services:
+  waha:
+    image: devlikeapro/waha:latest
+    container_name: waha
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - WHATSAPP_DEFAULT_ENGINE=GOWS
+      - WAHA_PRINT_QR=False
+      - WAHA_WORKER_RESTART_SESSIONS=True
+      - WHATSAPP_RESTART_ALL_SESSIONS=True
+      - WAHA_LOG_LEVEL=info
+      - TZ=Asia/Jerusalem
+    volumes:
+      - ./sessions:/app/.sessions
+      - ./media:/app/.media
+    networks:
+      - n8n_default
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=n8n_default
+      - traefik.http.routers.waha.rule=Host(`wa.suaempresa.com`)
+      - traefik.http.routers.waha.entrypoints=websecure
+      - traefik.http.routers.waha.tls=true
+      - traefik.http.routers.waha.tls.certresolver=mytlschallenge
+      - traefik.http.services.waha.loadbalancer.server.port=3000
+
+networks:
+  n8n_default:
+    external: true
